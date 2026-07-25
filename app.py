@@ -68,6 +68,7 @@ def index():
                 date_from=date_from,
                 date_to=date_to,
                 content_types=selected_types,
+                lenta_kind=tag.lenta_kind,
             )
         except Exception as exc:  # noqa: BLE001 — показываем пользователю понятную ошибку
             error = str(exc)
