@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Архив ленты Sports.ru</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="shell">
+    <header class="hero">
+      <p class="brand">Архив ленты</p>
+      <h1>Новости Sports.ru по дате</h1>
+      <p class="lead">Введите название тега и период — система сама найдёт его на Sports.ru и отсортирует ленту по дате.</p>
+    </header>
+
+    <section class="panel">
+      <form class="form" method="post" action="{{ url_for('search') }}">
+        <label class="field field-wide">
+          <span>Название тега</span>
+          <input
+            type="text"
+            name="tag"
+            required
+            autocomplete="off"
+            placeholder="Этери Тутберидзе"
+            value="{{ tag_query }}"
+          />
+          <small>Имя, клуб или турнир — как в поиске Sports.ru. Например: Тутберидзе, Спартак, РПЛ.</small>
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span>С даты</span>
+            <input type="date" name="date_from" value="{{ date_from }}" required />
+          </label>
+          <label class="field">
+            <span>По дату</span>
+            <input type="date" name="date_to" value="{{ date_to }}" required />
+          </label>
+          <label class="field">
+            <span>Быстрый год</span>
+            <select name="year" id="year">
+              <option value="">— вручную —</option>
+              {% for y in years %}
+              <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+
+        <fieldset class="types">
+          <legend>Тип материалов</legend>
+          {% for value, label in content_types %}
+          <label class="check">
+            <input type="checkbox" name="types" value="{{ value }}" {% if value in selected_types %}checked{% endif %} />
+            <span>{{ label }}</span>
+          </label>
+          {% endfor %}
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" class="btn">Показать ленту</button>
+        </div>
+      </form>
+
+      <div class="examples">
+        <p>Примеры:</p>
+        <ul>
+          {% for ex in examples %}
+          <li>
+            <a href="/?{{ {'tag': ex.tag, 'year': ex.year, 'run': 1}|urlencode }}{% for t in ex.types %}&types={{ t }}{% endfor %}">{{ ex.label }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="flash">
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if error %}
+    <div class="flash error">{{ error }}</div>
+    {% endif %}
+
+    {% if results is not none %}
+    <section class="results">
+      <div class="results-head">
+        <div>
+          <h2>{% if tag %}{{ tag.title }}{% else %}Результаты{% endif %}</h2>
+          <p>
+            {{ date_from }} — {{ date_to }}
+            · найдено {{ results|length }}
+            {% if tag %}
+              {% set meta = format_tag_meta(tag) %}
+              {% if meta %}· {{ meta }}{% endif %}
+              · <a href="{{ tag.url }}" target="_blank" rel="noopener">открыть тег</a>
+            {% endif %}
+          </p>
+          {% if alternatives %}
+          <p class="alts">
+            Другие совпадения:
+            {% for alt in alternatives %}
+              <a href="/?{{ {'tag': alt.url, 'date_from': date_from, 'date_to': date_to, 'run': 1}|urlencode }}{% for t in selected_types %}&types={{ t }}{% endfor %}">{{ alt.title }}{% set am = format_tag_meta(alt) %}{% if am %} ({{ am }}){% endif %}</a>{% if not loop.last %},{% endif %}
+            {% endfor %}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if results %}
+      <ol class="news">
+        {% for item in results %}
+        <li>
+          <time datetime="{{ item.published.isoformat() }}">{{ item.published.strftime('%d.%m.%Y %H:%M') }}</time>
+          <a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
+          {% if item.comments is not none %}
+          <span class="meta">{{ item.comments }} комм.</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="empty">За выбранный период новостей нет. Попробуйте расширить даты или другой тип материалов.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <footer class="foot">
+      Неофициальный локальный просмотрщик публичной ленты Sports.ru. Данные подгружаются с сайта в момент запроса.
+    </footer>
+  </main>
+
+  <script>
+    const year = document.getElementById('year');
+    const from = document.querySelector('input[name="date_from"]');
+    const to = document.querySelector('input[name="date_to"]');
+    year?.addEventListener('change', () => {
+      if (!year.value) return;
+      from.value = `${year.value}-01-01`;
+      to.value = `${year.value}-12-31`;
+    });
+  </script>
+</body>
+</html>
