@@ -119,4 +119,18 @@ def search():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    import socket
+
+    port = 5000
+    host = "0.0.0.0"
+    print("Локально:  http://127.0.0.1:{}/".format(port))
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            lan_ip = s.getsockname()[0]
+        print("С телефона/планшета (та же Wi-Fi): http://{}:{}/".format(lan_ip, port))
+    except OSError:
+        print("С телефона/планшета: http://<IP-вашего-ПК>:{}/".format(port))
+        print("IP смотрите командой ipconfig (IPv4).")
+    print("ПК и телефон должны быть в одной Wi-Fi сети.")
+    app.run(host=host, port=port, debug=True)

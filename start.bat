@@ -38,14 +38,46 @@ if errorlevel 1 (
 
 echo.
 echo Запускаю сайт...
-echo Откройте в браузере: http://127.0.0.1:5000/
-echo Чтобы остановить — закройте это окно или нажмите Ctrl+C.
+echo.
+echo   На этом компьютере:  http://127.0.0.1:5000/
+call :print_lan_url
+echo.
+echo   Телефон и ПК — в одной Wi-Fi сети.
+echo   Если не открывается с телефона, разрешите порт 5000 в брандмауэре Windows.
+echo   Чтобы остановить — закройте это окно или нажмите Ctrl+C.
 echo.
 
 start "" "http://127.0.0.1:5000/"
 %PY% app.py
 
 pause
+exit /b 0
+
+:print_lan_url
+set "LAN_IP="
+for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /c:"IPv4"') do (
+  for /f "tokens=* delims= " %%B in ("%%A") do (
+    echo %%B | findstr /r "^192\.168\." >nul
+    if not errorlevel 1 set "LAN_IP=%%B"
+    if not defined LAN_IP (
+      echo %%B | findstr /r "^10\." >nul
+      if not errorlevel 1 set "LAN_IP=%%B"
+    )
+    if not defined LAN_IP (
+      echo %%B | findstr /r "^172\.1[6-9]\." >nul
+      if not errorlevel 1 set "LAN_IP=%%B"
+      echo %%B | findstr /r "^172\.2[0-9]\." >nul
+      if not errorlevel 1 set "LAN_IP=%%B"
+      echo %%B | findstr /r "^172\.3[0-1]\." >nul
+      if not errorlevel 1 set "LAN_IP=%%B"
+    )
+  )
+)
+if defined LAN_IP (
+  echo   С телефона/планшета: http://!LAN_IP!:5000/
+) else (
+  echo   С телефона/планшета: узнайте IPv4 ПК через ipconfig и откройте http://IP:5000/
+)
 exit /b 0
 
 :find_python

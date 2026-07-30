@@ -126,6 +126,7 @@ body {
 
 input[type="url"],
 input[type="date"],
+input[type="text"],
 select {
   width: 100%;
   border: 1px solid var(--line);
@@ -134,6 +135,7 @@ select {
   border-radius: 0;
   padding: 0.78rem 0.85rem;
   font: inherit;
+  font-size: 16px; /* без автозума на iOS */
 }
 
 input:focus,
@@ -324,5 +326,14 @@ select:focus {
 
   .meta {
     justify-self: start;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .check {
+    min-height: 44px;
   }
 }
